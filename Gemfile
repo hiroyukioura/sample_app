@@ -8,7 +8,9 @@ gem 'sprockets', '2.11.0'
 gem 'bcrypt-ruby', '3.1.2'
 
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+group :development do
+  gem 'sqlite3'
+end
 
 group :development, :test do
   gem 'rspec-rails', '2.13.1'
