@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:index, :edit, :update]
+  before_action :signed_in_user,
+                only: [:index, :edit, :update, :destroy, :following, :followers]
   before_action :correct_user,   only: [:edit, :update]
   before_action :admin_user,     only: :destroy
 
@@ -42,9 +43,28 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    User.find(params[:id]).destroy
-    flash[:success] = "User destroyed."
-    redirect_to users_url
+    user = User.find(params[:id])
+    if user != current_user
+      user.destroy
+      flash[:notice] = "User destroyed".
+    else
+      flash[:error] = "Suicide is immoral."
+    end
+    redirect_to users_path
+  end
+
+  def following
+    @title = "Following"
+    @user = User.find(params[:id])
+    @users = @user.followed_users.paginate(page: params[:page])
+    render 'show_follow'
+  end
+
+  def followers
+    @title = "Followers"
+    @user = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
   end
 
   private
@@ -56,13 +76,22 @@ class UsersController < ApplicationController
 
     # Before actions
 
+    def signed_in_user
+      unless signed_in?
+        store_location
+        flash.now[:error] = "Please sign in."
+        redirect_to signin_url
+      end
+    end
+
     def correct_user
       @user = User.find(params[:id])
       redirect_to(root_path) unless current_user?(@user)
     end
 
+    # Confirms an admin user.
     def admin_user
-      redirect_to(root_path) unless current_user.admin?
+      redirect_to(root_url) unless current_user.admin?
     end
 
 end
